@@ -53,12 +53,22 @@ class AppDelegate : UIResponder, UIApplicationDelegate {
 
         //Uncomment the code below to see how you can customize the color, textcolor,
         //font and fontsize of the navigation bar
-//        self.customizeLoginView()
+        self.customizeLoginView()
         AuthHelper.loginIfRequired {
             self.setupRootViewController()
         }
         
         return true
+    }
+
+    func applicationWillTerminate(_ application: UIApplication) {
+        AuthHelper.handleLogout {
+            print("Logging out")
+            UserAccountManager.shared.logout()
+           // AuthHelper.loginIfRequired = true
+            //SalesforceManager.shared.bootConfig?.shouldAuthenticateOnFirstLaunch = true
+            //[SalesforceManager, sharedManager].appConfig.shouldAuthenticate
+        }
     }
     
     func registerForRemotePushNotifications() {        PushNotificationManager.sharedInstance().registerForRemoteNotifications();

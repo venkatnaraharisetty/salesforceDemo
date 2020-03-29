@@ -28,47 +28,20 @@ import SalesforceSDKCore
 
 class RootViewController: UITableViewController {
     
-    var dataRows = [[String: Any]]()
+    var dataRows = ["Users", "Accounts", "Cases"]
+
     
     // MARK: - View lifecycle
     override func loadView() {
         super.loadView()
-        self.title = "Mobile SDK Sample App"
-        let request = RestClient.shared.request(forQuery: "SELECT Name FROM Contact LIMIT 10", apiVersion: SFRestDefaultAPIVersion)
-        
-        RestClient.shared.send(request: request) { [weak self] (result) in
-            switch result {
-                case .success(let response):
-                    self?.handleSuccess(response: response, request: request)
-                case .failure(let error):
-                     SalesforceLogger.d(RootViewController.self, message:"Error invoking: \(request) , \(error)")
-            }
-        }
-  
-        //NOTE: An alternative way of consuming the response
-        //RestClient.shared.send(request: request) { [weak self] (result) in
-        //   do {
-        //      try self?.handleSuccess(response: result.get(),request: request)
-        //   }
-        //   catch(let error) {
-        //       SalesforceLogger.d(RootViewController.self, message:"Error invoking: \(request) , \(error)")
-        //   }
-        //}
-    
-    }
-    
-    func handleSuccess(response: RestResponse, request: RestRequest) {
-        guard let jsonResponse  = try? response.asJson() as? [String:Any], let records = jsonResponse["records"] as? [[String:Any]]  else {
-                SalesforceLogger.d(RootViewController.self, message:"Empty Response for : \(request)")
-                return
-        }
-        SalesforceLogger.d(type(of:self), message:"Invoked: \(request)")
-        DispatchQueue.main.async {
-           self.dataRows = records
-           self.tableView.reloadData()
-       }
+        self.title = "Home"
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Logout", style: .plain, target: self, action: #selector(logoutTapped))
+
     }
 
+    @objc func logoutTapped() {
+         UserAccountManager.shared.logout()
+    }
     
     // MARK: - Table view data source
     func numberOfSectionsInTableView(tableView: UITableView) -> Int {
@@ -91,10 +64,20 @@ class RootViewController: UITableViewController {
         
         // Configure the cell to show the data.
         let obj = dataRows[indexPath.row]
-        cell.textLabel?.text = obj["Name"] as? String
+        cell.textLabel?.text = obj
         
         // This adds the arrow to the right hand side.
         cell.accessoryType = UITableViewCell.AccessoryType.disclosureIndicator
         return cell
     }
+
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let cellTapped = dataRows[indexPath.row]
+
+        let storyBoard : UIStoryboard = UIStoryboard(name: "MainView", bundle:nil)
+        let listViewController = storyBoard.instantiateViewController(withIdentifier: "ListViewController") as! ListViewController
+        listViewController.contentSelected =  cellTapped
+        self.navigationController?.pushViewController(listViewController, animated: true)
+    }
+
 }
